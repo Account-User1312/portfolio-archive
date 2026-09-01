@@ -37,3 +37,12 @@ To wipe local edits and fall back to the `projects.js` seeds, run
 `window.portfolioConfig` in `projects.js` controls the header copy, the contact pane
 entries (`contacts`), the status dropdown choices (`statusOptions`), the admin password,
 and the card accent (`projectAccent`, currently `violet`).
+
+## Deploy
+
+Hosted on Cloudflare Pages as project `nealgillespie` → https://nealgillespie.pages.dev
+
+Connected to `Account-User1312/portfolio-archive` on GitHub; every push to `main`
+auto-deploys. There is no build step: framework preset `None`, build command empty,
+build output directory `/`. `_headers` sets security headers and long-lived caching
+for `/assets/*`.
