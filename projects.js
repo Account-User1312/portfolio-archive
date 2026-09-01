@@ -8,7 +8,7 @@ window.portfolioConfig = {
   headline: "A foundational index for digital work.",
   intro: "A living collection of experiments, websites, visual systems, and finished builds.",
   projectAccent: "violet",
-  statusOptions: ["Featured", "Draft", "Ready for link", "Upcoming"],
+  statusOptions: ["Featured", "Draft", "Project", "Upcoming"],
   contacts: [
     { label: "Personal", value: "nealtgill@gmail.com", href: "mailto:nealtgill@gmail.com" },
     {
@@ -45,7 +45,7 @@ window.portfolioProjects = [
     url: "#",
     label: "Case file",
     description: "A more polished project can live here with a public URL attached.",
-    status: "Ready for link",
+    status: "Project",
   },
   {
     title: "Future Project",

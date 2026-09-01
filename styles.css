@@ -30,6 +30,7 @@ html {
 
 body {
   min-height: 100vh;
+  min-height: 100svh;
   margin: 0;
   background: var(--night);
   color: var(--ink);
@@ -62,6 +63,7 @@ body::before {
 .shell {
   width: min(1180px, calc(100% - 40px));
   min-height: 100vh;
+  min-height: 100svh;
   margin: 0 auto;
   padding: 28px 0 64px;
 }
@@ -115,6 +117,7 @@ body::before {
   background: rgba(16, 17, 29, 0.34);
   color: rgba(248, 243, 255, 0.84);
   font-size: 0.9rem;
+  -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
   transition:
     border-color 160ms ease,
@@ -133,7 +136,7 @@ body::before {
   display: grid;
   align-content: end;
   max-width: 780px;
-  min-height: clamp(500px, 64vh, 740px);
+  min-height: clamp(420px, 64svh, 740px);
   padding: 74px 0 54px;
 }
 
@@ -214,7 +217,7 @@ h1 {
 
 .project-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
   gap: 14px;
 }
 
@@ -234,6 +237,7 @@ h1 {
   color: var(--ink);
   box-shadow: var(--shadow);
   text-decoration: none;
+  -webkit-backdrop-filter: blur(22px);
   backdrop-filter: blur(22px);
   transition:
     border-color 170ms ease,
@@ -254,6 +258,7 @@ h1 {
 
 .project-card:hover,
 .project-card:focus-visible {
+  border-color: rgba(255, 255, 255, 0.42);
   border-color: color-mix(in srgb, var(--accent), white 42%);
   background:
     linear-gradient(140deg, rgba(255, 255, 255, 0.14), transparent 34%),
@@ -314,10 +319,6 @@ h1 {
 }
 
 @media (max-width: 980px) {
-  .project-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .hero {
     min-height: 560px;
   }
@@ -346,10 +347,6 @@ h1 {
 
   h1 {
     max-width: 12ch;
-  }
-
-  .project-grid {
-    grid-template-columns: 1fr;
   }
 
   .project-card {
@@ -466,6 +463,7 @@ h1 {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   cursor: pointer;
+  -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   transition:
     border-color 160ms ease,
@@ -474,6 +472,7 @@ h1 {
 
 .card-tool:hover,
 .card-tool:focus-visible {
+  border-color: rgba(255, 255, 255, 0.42);
   border-color: color-mix(in srgb, var(--accent), white 42%);
   background: rgba(52, 45, 74, 0.86);
 }
@@ -540,6 +539,7 @@ h1 {
   inset: 0;
   z-index: 40;
   background: rgba(4, 7, 14, 0.62);
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
 }
 
@@ -550,6 +550,7 @@ h1 {
   left: 50%;
   width: min(520px, calc(100% - 32px));
   max-height: min(86vh, 760px);
+  max-height: min(86dvh, 760px);
   padding: 24px;
   overflow-y: auto;
   border: 1px solid rgba(255, 194, 116, 0.28);
@@ -558,6 +559,7 @@ h1 {
     linear-gradient(140deg, rgba(255, 255, 255, 0.1), transparent 36%),
     rgba(18, 18, 31, 0.86);
   box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(26px);
   backdrop-filter: blur(26px);
   transform: translate(-50%, -50%);
 }
@@ -676,7 +678,9 @@ h1 {
   background: rgba(9, 11, 20, 0.62);
   color: var(--ink);
   font-family: inherit;
-  font-size: 0.96rem;
+  font-size: 16px;
+  -webkit-appearance: none;
+  appearance: none;
   resize: vertical;
   transition:
     border-color 160ms ease,
@@ -750,8 +754,9 @@ h1 {
   background: rgba(9, 11, 20, 0.62);
   color: var(--ink);
   font-family: inherit;
-  font-size: 0.96rem;
+  font-size: 16px;
   cursor: pointer;
+  -webkit-appearance: none;
   appearance: none;
   background-image: linear-gradient(45deg, transparent 50%, rgba(255, 197, 132, 0.9) 50%),
     linear-gradient(135deg, rgba(255, 197, 132, 0.9) 50%, transparent 50%);
@@ -806,4 +811,198 @@ h1 {
 .archive-notice.is-local {
   border-color: rgba(255, 194, 116, 0.42);
   color: rgba(255, 224, 186, 0.92);
+}
+
+/* ---------------------------------------------------------------------
+   Compatibility and window-size handling
+   ------------------------------------------------------------------ */
+
+/* The hidden attribute must beat layout rules like `display: grid`,
+   otherwise panes and toggled sections stay on screen. */
+[hidden] {
+  display: none !important;
+}
+
+/* Long titles, URLs and emails must never push a card or pane sideways. */
+.project-title,
+.project-description,
+.add-card-hint,
+.contact-list a,
+.archive-notice {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.project-title {
+  max-width: 100%;
+}
+
+/* Keyboard focus stays visible even where we restyle the control. */
+.field input:focus-visible,
+.field textarea:focus-visible,
+.field select:focus-visible,
+.nav a:focus-visible,
+.nav-button:focus-visible,
+.ghost-button:focus-visible,
+.solid-button:focus-visible,
+.card-tool:focus-visible,
+.pane-close:focus-visible,
+.add-card:focus-visible {
+  outline: 2px solid rgba(255, 197, 132, 0.9);
+  outline-offset: 2px;
+}
+
+/* Touch devices have no hover, so edit controls must be permanently visible. */
+@media (hover: none) {
+  .card-tools {
+    opacity: 1;
+  }
+
+  .project-card:hover,
+  .add-card:hover {
+    transform: none;
+  }
+}
+
+/* Short windows — a landscape phone, or a desktop window dragged flat.
+   The hero must not eat the whole screen before the projects appear. */
+@media (max-height: 640px) {
+  .hero {
+    min-height: 0;
+    padding: 34px 0 30px;
+  }
+
+  h1 {
+    font-size: clamp(2.2rem, 6vw, 3.4rem);
+    margin-bottom: 16px;
+  }
+
+  .intro {
+    margin-bottom: 18px;
+  }
+
+  .pane {
+    max-height: min(94vh, 760px);
+    max-height: min(94dvh, 760px);
+    padding: 18px;
+  }
+}
+
+/* Narrow windows that are not phones: a resized desktop window, a split
+   screen, or a tablet in portrait. */
+@media (max-width: 560px) {
+  .shell {
+    padding-bottom: 44px;
+  }
+
+  .status-strip span,
+  .nav a,
+  .nav-button {
+    font-size: 0.84rem;
+  }
+
+  .pane {
+    width: calc(100% - 24px);
+    padding: 20px 18px;
+  }
+
+  .pane-head h2 {
+    font-size: 1.45rem;
+  }
+
+  .contact-list a {
+    font-size: 0.94rem;
+  }
+}
+
+/* Very narrow — small phones and heavily shrunken windows. */
+@media (max-width: 380px) {
+  .shell {
+    width: min(100% - 20px, 1180px);
+  }
+
+  .project-card {
+    padding: 18px;
+    min-height: 200px;
+  }
+
+  .pane-actions .ghost-button,
+  .pane-actions .solid-button {
+    width: 100%;
+    flex: none;
+  }
+
+  .pane-actions-spacer {
+    display: none;
+  }
+}
+
+/* Wide windows: keep the grid from stretching cards into billboards. */
+@media (min-width: 1500px) {
+  .shell {
+    width: min(1320px, calc(100% - 60px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .project-card:hover,
+  .nav a:hover,
+  .nav-button:hover,
+  .ghost-button:hover,
+  .solid-button:hover,
+  .add-card:hover {
+    transform: none;
+  }
+}
+
+/* Backdrop blur is expensive and unsupported in a few engines; without it the
+   translucent panels need more solid backgrounds to stay readable. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .pane {
+    background: rgba(14, 14, 26, 0.97);
+  }
+
+  .pane-backdrop {
+    background: rgba(4, 7, 14, 0.86);
+  }
+
+  .project-card,
+  .nav a,
+  .nav-button,
+  .ghost-button,
+  .status-strip span,
+  .archive-notice {
+    background: rgba(14, 15, 26, 0.9);
+  }
+}
+
+/* Brand reads as a tag alongside the nav tags, tinted violet, diamond kept. */
+.brand {
+  min-height: 38px;
+  padding: 9px 13px;
+  border: 1px solid rgba(167, 108, 255, 0.52);
+  border-radius: 8px;
+  background: rgba(84, 52, 138, 0.42);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.brand:hover,
+.brand:focus-visible {
+  border-color: rgba(191, 148, 255, 0.86);
+  background: rgba(104, 66, 168, 0.6);
+  transform: translateY(-1px);
 }

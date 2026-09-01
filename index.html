@@ -9,7 +9,15 @@
       content="A personal portfolio archive for website and creative web projects."
     >
     <link rel="preload" href="assets/mountain-archive-bg-pop.png" as="image">
-    <link rel="stylesheet" href="styles.css">
+    <!-- The design calls for Inter; without this, Windows and Android fall back to
+         a different grotesque and the type looks noticeably heavier. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
+      rel="stylesheet"
+    >
+    <link rel="stylesheet" href="styles.css?v=4">
   </head>
   <body>
     <div class="scene" aria-hidden="true"></div>
@@ -152,7 +160,7 @@
       </form>
     </section>
 
-    <script src="projects.js"></script>
+    <script src="projects.js?v=4"></script>
     <script>
       const config = window.portfolioConfig || {};
       const seedProjects = window.portfolioProjects || [];
@@ -160,7 +168,7 @@
       const projectAccent = config.projectAccent || "violet";
       const STATUS_OPTIONS = Array.isArray(config.statusOptions) && config.statusOptions.length
         ? config.statusOptions
-        : ["Featured", "Draft", "Ready for link", "Upcoming"];
+        : ["Featured", "Draft", "Project", "Upcoming"];
 
       // On localhost there is no Functions runtime, so the page runs as a local
       // draft: edits are on, and they stay in this browser. Anywhere else the
