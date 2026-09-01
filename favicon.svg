@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Portfolio Archive">
+  <defs>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff7a2f"/>
+      <stop offset="1" stop-color="#a76cff"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ff7938" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ff7938" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Glass plate, so the mark holds up against a light or dark tab bar -->
+  <rect width="64" height="64" rx="14" fill="#141226"/>
+  <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="13.25" fill="none"
+        stroke="#a76cff" stroke-opacity="0.52" stroke-width="1.5"/>
+
+  <circle cx="32" cy="32" r="26" fill="url(#glow)"/>
+
+  <!-- The brand diamond: a square turned 45 degrees, ember to violet -->
+  <g transform="rotate(45 32 32)">
+    <rect x="15" y="15" width="34" height="34" rx="2"
+          fill="url(#edge)" stroke="#ffc274" stroke-opacity="0.86" stroke-width="2.5"/>
+  </g>
+</svg>
