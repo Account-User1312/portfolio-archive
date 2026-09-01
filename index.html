@@ -17,7 +17,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
       rel="stylesheet"
     >
-    <link rel="stylesheet" href="styles.css?v=5">
+    <link rel="stylesheet" href="styles.css?v=8">
   </head>
   <body>
     <div class="scene" aria-hidden="true"></div>
@@ -54,9 +54,28 @@
           <button class="ghost-button admin-only" type="button" id="addBlockButton" hidden>+ Add block</button>
         </div>
 
+        <div class="search-row">
+          <div class="search-field">
+            <svg class="search-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" focusable="false">
+              <circle cx="8.75" cy="8.75" r="5.25" stroke="currentColor" stroke-width="1.8"></circle>
+              <path d="M12.8 12.8 17 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+            </svg>
+            <input
+              type="search"
+              id="blockSearch"
+              placeholder="Search the archive"
+              aria-label="Search blocks by title, label, status, or description"
+              autocomplete="off"
+            >
+            <button class="search-clear" type="button" id="searchClear" aria-label="Clear search" hidden>&times;</button>
+          </div>
+          <span class="search-count" id="searchCount" role="status"></span>
+        </div>
+
         <p class="archive-notice" id="archiveNotice" role="status" hidden></p>
 
         <div class="project-grid" id="projectGrid" aria-live="polite"></div>
+        <p class="empty-state" id="emptyState" hidden></p>
       </section>
     </main>
 
@@ -160,7 +179,7 @@
       </form>
     </section>
 
-    <script src="projects.js?v=5"></script>
+    <script src="projects.js?v=8"></script>
     <script>
       const config = window.portfolioConfig || {};
       const seedProjects = window.portfolioProjects || [];
@@ -196,6 +215,7 @@
 
       let projects = [];
       let isAdmin = false;
+      let searchQuery = "";
 
       const grid = document.querySelector("#projectGrid");
       const notice = document.querySelector("#archiveNotice");
@@ -339,11 +359,13 @@
             return button;
           };
 
-          tools.append(
-            makeTool("◀", `Move ${project.title} earlier`, () => moveBlock(project.id, -1), index === 0),
-            makeTool("▶", `Move ${project.title} later`, () => moveBlock(project.id, 1), index === projects.length - 1),
-            makeTool("Edit", `Edit ${project.title}`, () => openBlockPane(project.id))
-          );
+          if (!searchQuery.trim()) {
+            tools.append(
+              makeTool("◀", `Move ${project.title} earlier`, () => moveBlock(project.id, -1), index === 0),
+              makeTool("▶", `Move ${project.title} later`, () => moveBlock(project.id, 1), index === projects.length - 1)
+            );
+          }
+          tools.append(makeTool("Edit", `Edit ${project.title}`, () => openBlockPane(project.id)));
           card.appendChild(tools);
         }
 
@@ -363,10 +385,31 @@
         return button;
       };
 
+      const matchesQuery = (project, query) =>
+        [project.title, project.label, project.status, project.description, project.url]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+
       const render = () => {
-        const cards = projects.map(buildCard);
-        if (isAdmin) cards.push(buildAddCard());
+        const query = searchQuery.trim().toLowerCase();
+        const visible = query ? projects.filter((project) => matchesQuery(project, query)) : projects;
+
+        const cards = visible.map(buildCard);
+        // The add tile is not a search result, and reordering a filtered view
+        // would move blocks you cannot see, so both stand down while filtering.
+        if (isAdmin && !query) cards.push(buildAddCard());
         grid.replaceChildren(...cards);
+
+        const emptyState = document.querySelector("#emptyState");
+        emptyState.hidden = visible.length > 0;
+        emptyState.textContent = visible.length ? "" : `Nothing in the archive matches “${searchQuery.trim()}”.`;
+
+        const count = document.querySelector("#searchCount");
+        count.textContent = query
+          ? `${visible.length} of ${projects.length} ${projects.length === 1 ? "block" : "blocks"}`
+          : "";
+        document.querySelector("#searchClear").hidden = !searchQuery;
         document.querySelectorAll(".admin-only").forEach((node) => {
           node.hidden = !isAdmin;
         });
@@ -607,6 +650,26 @@
           })
         );
       }
+
+      const searchInput = document.querySelector("#blockSearch");
+      searchInput.addEventListener("input", (event) => {
+        searchQuery = event.target.value;
+        render();
+      });
+      searchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && searchQuery) {
+          event.stopPropagation(); // clear the search rather than closing a pane
+          searchQuery = "";
+          searchInput.value = "";
+          render();
+        }
+      });
+      document.querySelector("#searchClear").addEventListener("click", () => {
+        searchQuery = "";
+        searchInput.value = "";
+        render();
+        searchInput.focus();
+      });
 
       document.querySelector("#adminButton").addEventListener("click", openAdminPane);
       document.querySelector("#contactButton").addEventListener("click", () => openPane(contactPane));

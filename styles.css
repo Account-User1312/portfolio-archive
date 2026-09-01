@@ -1023,3 +1023,124 @@ h1 {
   font-size: 0.72rem;
   line-height: 1;
 }
+
+/* Search ---------------------------------------------------------------- */
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.search-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  max-width: 460px;
+}
+
+.search-icon {
+  position: absolute;
+  z-index: 2; /* the input's backdrop-filter would otherwise paint over it */
+  left: 12px;
+  width: 18px;
+  height: 18px;
+  color: rgba(255, 197, 132, 0.82);
+  pointer-events: none;
+}
+
+.search-field input {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 40px 11px 36px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(16, 17, 29, 0.42);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 16px;
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  transition:
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+/* Suppress the engine's own clear affordance; the page provides one. */
+.search-field input::-webkit-search-decoration,
+.search-field input::-webkit-search-cancel-button,
+.search-field input::-webkit-search-results-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.search-field input::placeholder {
+  color: rgba(238, 232, 255, 0.42);
+}
+
+.search-field input:focus {
+  outline: none;
+  border-color: rgba(255, 186, 116, 0.6);
+  background: rgba(34, 30, 52, 0.6);
+}
+
+.search-clear {
+  position: absolute;
+  z-index: 2;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  background: rgba(12, 13, 24, 0.7);
+  color: rgba(248, 243, 255, 0.82);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.search-clear:hover,
+.search-clear:focus-visible {
+  border-color: rgba(255, 186, 116, 0.52);
+  background: rgba(52, 45, 74, 0.8);
+}
+
+.search-count {
+  flex-shrink: 0;
+  color: rgba(238, 232, 255, 0.62);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.empty-state {
+  margin: 18px 0 0;
+  padding: 22px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(16, 17, 29, 0.34);
+  color: var(--muted);
+  font-size: 0.98rem;
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .search-field {
+    max-width: none;
+  }
+
+  .search-count {
+    font-size: 0.72rem;
+  }
+}
