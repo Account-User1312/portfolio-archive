@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Portfolio Archive</title>
+    <meta
+      name="description"
+      content="A personal portfolio archive for website and creative web projects."
+    >
+    <link rel="preload" href="assets/mountain-archive-bg-pop.png" as="image">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="scene" aria-hidden="true"></div>
+
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="#" data-config="name">Portfolio Archive</a>
+        <nav class="nav" aria-label="Main navigation">
+          <a href="#projects">Projects</a>
+          <button class="nav-button" type="button" id="contactButton" aria-haspopup="dialog">Contact</button>
+          <button class="nav-button" type="button" id="adminButton" aria-haspopup="dialog">Admin</button>
+        </nav>
+      </header>
+
+      <section class="hero" aria-labelledby="site-title">
+        <p class="kicker" data-config="kicker">Personal website archive</p>
+        <h1 id="site-title" data-config="headline">A foundational index for digital work.</h1>
+        <p class="intro" data-config="intro">
+          A living collection of experiments, websites, visual systems, and finished builds.
+        </p>
+        <div class="status-strip" aria-label="Archive stats">
+          <span><strong data-stat="projectCount">0</strong> projects</span>
+          <span><strong data-stat="liveLinkCount">0</strong> live links</span>
+          <span><strong data-stat="featuredCount">0</strong> featured</span>
+        </div>
+      </section>
+
+      <section class="projects" id="projects" aria-labelledby="projects-title">
+        <div class="section-heading">
+          <div>
+            <p class="kicker">Archive index</p>
+            <h2 id="projects-title">Project Links</h2>
+          </div>
+          <button class="ghost-button admin-only" type="button" id="addBlockButton" hidden>+ Add block</button>
+        </div>
+
+        <div class="project-grid" id="projectGrid" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <div class="pane-backdrop" id="paneBackdrop" hidden></div>
+
+    <section class="pane" id="contactPane" role="dialog" aria-modal="true" aria-labelledby="contactPaneTitle" hidden>
+      <header class="pane-head">
+        <p class="kicker">Get in touch</p>
+        <h2 id="contactPaneTitle">Contact</h2>
+        <button class="pane-close" type="button" data-close-pane aria-label="Close contact pane">&times;</button>
+      </header>
+      <ul class="contact-list">
+        <li>
+          <span class="contact-label">Personal</span>
+          <a href="mailto:nealtgill@gmail.com">nealtgill@gmail.com</a>
+        </li>
+        <li>
+          <span class="contact-label">Free Knowledge Library</span>
+          <a href="mailto:freeknowledgelibrary@proton.me">freeknowledgelibrary@proton.me</a>
+        </li>
+        <li>
+          <span class="contact-label">Phone</span>
+          <a href="tel:+15138071705">513-807-1705</a>
+        </li>
+      </ul>
+    </section>
+
+    <section class="pane" id="adminPane" role="dialog" aria-modal="true" aria-labelledby="adminPaneTitle" hidden>
+      <header class="pane-head">
+        <p class="kicker" id="adminPaneKicker">Restricted</p>
+        <h2 id="adminPaneTitle">Admin</h2>
+        <button class="pane-close" type="button" data-close-pane aria-label="Close admin pane">&times;</button>
+      </header>
+
+      <form class="block-form" id="adminForm">
+        <p class="pane-note">Sign in to add, edit, and remove archive blocks. Visitors see the index read-only.</p>
+        <label class="field">
+          <span>Password</span>
+          <input type="password" name="password" id="adminPassword" autocomplete="current-password">
+        </label>
+        <p class="form-error" id="adminError" role="alert" hidden></p>
+        <div class="pane-actions">
+          <span class="pane-actions-spacer"></span>
+          <button class="ghost-button" type="button" data-close-pane>Cancel</button>
+          <button class="solid-button" type="submit">Unlock</button>
+        </div>
+      </form>
+
+      <div id="adminSignedIn" hidden>
+        <p class="pane-note">You are signed in as admin. Edit controls are live on every block until you sign out or close the tab.</p>
+        <div class="pane-actions">
+          <span class="pane-actions-spacer"></span>
+          <button class="ghost-button" type="button" data-close-pane>Close</button>
+          <button class="ghost-button danger" type="button" id="adminSignOut">Sign out</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="pane" id="blockPane" role="dialog" aria-modal="true" aria-labelledby="blockPaneTitle" hidden>
+      <header class="pane-head">
+        <p class="kicker" id="blockPaneKicker">New entry</p>
+        <h2 id="blockPaneTitle">Add block</h2>
+        <button class="pane-close" type="button" data-close-pane aria-label="Close block editor">&times;</button>
+      </header>
+      <form class="block-form" id="blockForm" novalidate>
+        <label class="field">
+          <span>Title</span>
+          <input type="text" name="title" id="blockTitle" required placeholder="Project title" autocomplete="off">
+        </label>
+        <label class="field">
+          <span>Link</span>
+          <input type="url" name="url" id="blockUrl" placeholder="https://example.com" autocomplete="off" inputmode="url">
+        </label>
+        <div class="field-row">
+          <label class="field">
+            <span>Label</span>
+            <input type="text" name="label" id="blockLabel" placeholder="Website" autocomplete="off">
+          </label>
+          <label class="field">
+            <span>Status</span>
+            <select name="status" id="blockStatus"></select>
+          </label>
+        </div>
+        <label class="field">
+          <span>Description</span>
+          <textarea name="description" id="blockDescription" rows="3" placeholder="One-line context for the project."></textarea>
+        </label>
+        <p class="form-error" id="blockError" role="alert" hidden></p>
+        <div class="pane-actions">
+          <button class="ghost-button danger" type="button" id="blockDelete" hidden>Delete block</button>
+          <span class="pane-actions-spacer"></span>
+          <button class="ghost-button" type="button" data-close-pane>Cancel</button>
+          <button class="solid-button" type="submit" id="blockSubmit">Add block</button>
+        </div>
+      </form>
+    </section>
+
+    <script src="projects.js"></script>
+    <script>
+      const config = window.portfolioConfig || {};
+      const seedProjects = window.portfolioProjects || [];
+      const STORAGE_KEY = "portfolioArchive.projects.v1";
+      const ADMIN_KEY = "portfolioArchive.admin.v1";
+      // Soft gate only: this is a static page, so the password is visible in
+      // the source. It keeps casual visitors out of the editor, nothing more.
+      const ADMIN_PASSWORD = config.adminPassword || "admin-password";
+      const projectAccent = config.projectAccent || "violet";
+
+      document.querySelectorAll("[data-config]").forEach((node) => {
+        const key = node.dataset.config;
+        if (!config[key]) return;
+        node.textContent = config[key];
+      });
+
+      const makeId = () =>
+        window.crypto && window.crypto.randomUUID
+          ? window.crypto.randomUUID()
+          : `block-${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+
+      const normalize = (project) => ({
+        id: project.id || makeId(),
+        title: project.title || "Untitled block",
+        url: project.url || "#",
+        label: project.label || "Website",
+        description: project.description || "",
+        status: project.status || "Archive",
+      });
+
+      const loadProjects = () => {
+        try {
+          const stored = window.localStorage.getItem(STORAGE_KEY);
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) return parsed.map(normalize);
+          }
+        } catch (error) {
+          console.warn("Falling back to projects.js seeds:", error);
+        }
+        return seedProjects.map(normalize);
+      };
+
+      const saveProjects = () => {
+        try {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+        } catch (error) {
+          console.warn("Could not save blocks locally:", error);
+        }
+      };
+
+      let projects = loadProjects();
+
+      const readAdmin = () => {
+        try {
+          return window.sessionStorage.getItem(ADMIN_KEY) === "true";
+        } catch (error) {
+          return false;
+        }
+      };
+
+      let isAdmin = readAdmin();
+
+      const grid = document.querySelector("#projectGrid");
+      const isPlaceholderUrl = (url) => !url || url === "#";
+
+      const renderStats = () => {
+        const stats = {
+          projectCount: projects.length,
+          liveLinkCount: projects.filter((project) => !isPlaceholderUrl(project.url)).length,
+          featuredCount: projects.filter((project) =>
+            String(project.status || "").toLowerCase().includes("featured")
+          ).length,
+        };
+
+        Object.entries(stats).forEach(([key, value]) => {
+          const node = document.querySelector(`[data-stat='${key}']`);
+          if (node) node.textContent = value;
+        });
+      };
+
+      const makeSpan = (className, text) => {
+        const span = document.createElement("span");
+        span.className = className;
+        span.textContent = text;
+        return span;
+      };
+
+      const buildCard = (project) => {
+        const card = document.createElement("article");
+        card.className = `project-card accent-${projectAccent}`;
+        card.dataset.id = project.id;
+
+        const link = document.createElement("a");
+        link.className = "project-link";
+        link.href = project.url || "#";
+        link.setAttribute("aria-label", `Open ${project.title}`);
+        if (!isPlaceholderUrl(project.url)) {
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+        }
+
+        const footer = document.createElement("span");
+        footer.className = "project-footer";
+        footer.appendChild(makeSpan("", project.status || "Archive"));
+        if (isPlaceholderUrl(project.url)) {
+          footer.appendChild(makeSpan("project-flag", "No link yet"));
+        }
+
+        card.append(
+          link,
+          makeSpan("project-meta", project.label || "Website"),
+          makeSpan("project-title", project.title),
+          makeSpan("project-description", project.description || ""),
+          footer
+        );
+
+        if (isAdmin) {
+          const tools = document.createElement("div");
+          tools.className = "card-tools";
+          const edit = document.createElement("button");
+          edit.type = "button";
+          edit.className = "card-tool";
+          edit.textContent = "Edit";
+          edit.setAttribute("aria-label", `Edit ${project.title}`);
+          edit.addEventListener("click", () => openBlockPane(project.id));
+          tools.appendChild(edit);
+          card.appendChild(tools);
+        }
+
+        return card;
+      };
+
+      const buildAddCard = () => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "project-card add-card";
+        button.innerHTML = "";
+        button.append(
+          makeSpan("add-card-plus", "+"),
+          makeSpan("add-card-title", "Add block"),
+          makeSpan("add-card-hint", "Give it a title and a link.")
+        );
+        button.addEventListener("click", () => openBlockPane(null));
+        return button;
+      };
+
+      const render = () => {
+        const cards = projects.map(buildCard);
+        if (isAdmin) cards.push(buildAddCard());
+        grid.replaceChildren(...cards);
+        document.querySelectorAll(".admin-only").forEach((node) => {
+          node.hidden = !isAdmin;
+        });
+        document.querySelector("#adminButton").textContent = isAdmin ? "Admin ✓" : "Admin";
+        renderStats();
+      };
+
+      // Panes ------------------------------------------------------------
+      const backdrop = document.querySelector("#paneBackdrop");
+      const contactPane = document.querySelector("#contactPane");
+      const blockPane = document.querySelector("#blockPane");
+      const blockForm = document.querySelector("#blockForm");
+      const blockError = document.querySelector("#blockError");
+      const blockDelete = document.querySelector("#blockDelete");
+      let activePane = null;
+      let lastFocused = null;
+      let editingId = null;
+
+      const closePane = () => {
+        if (!activePane) return;
+        activePane.hidden = true;
+        backdrop.hidden = true;
+        activePane = null;
+        editingId = null;
+        if (lastFocused && document.contains(lastFocused)) lastFocused.focus();
+      };
+
+      const openPane = (pane, focusTarget) => {
+        lastFocused = document.activeElement;
+        if (activePane) activePane.hidden = true;
+        activePane = pane;
+        backdrop.hidden = false;
+        pane.hidden = false;
+        (focusTarget || pane.querySelector("[data-close-pane]")).focus();
+      };
+
+      const STATUS_OPTIONS = Array.isArray(config.statusOptions) && config.statusOptions.length
+        ? config.statusOptions
+        : ["Featured", "Draft", "Ready for link", "Upcoming"];
+
+      const fillStatusOptions = (current) => {
+        const select = document.querySelector("#blockStatus");
+        const values = [...STATUS_OPTIONS];
+        if (current && !values.some((value) => value.toLowerCase() === current.toLowerCase())) {
+          values.push(current);
+        }
+        select.replaceChildren(
+          ...values.map((value) => {
+            const option = document.createElement("option");
+            option.value = value;
+            option.textContent = value;
+            return option;
+          })
+        );
+        select.value = current && values.includes(current) ? current : values[0];
+      };
+
+      function openBlockPane(id) {
+        if (!isAdmin) return openAdminPane();
+        const project = id ? projects.find((item) => item.id === id) : null;
+        editingId = project ? project.id : null;
+
+        document.querySelector("#blockPaneKicker").textContent = project ? "Edit entry" : "New entry";
+        document.querySelector("#blockPaneTitle").textContent = project ? "Edit block" : "Add block";
+        document.querySelector("#blockSubmit").textContent = project ? "Save block" : "Add block";
+        blockDelete.hidden = !project;
+
+        blockForm.reset();
+        blockError.hidden = true;
+        document.querySelector("#blockTitle").value = project ? project.title : "";
+        document.querySelector("#blockUrl").value = project && project.url !== "#" ? project.url : "";
+        document.querySelector("#blockLabel").value = project ? project.label : "";
+        fillStatusOptions(project ? project.status : "");
+        document.querySelector("#blockDescription").value = project ? project.description : "";
+
+        openPane(blockPane, document.querySelector("#blockTitle"));
+      }
+
+      const tidyUrl = (value) => {
+        const url = value.trim();
+        if (!url) return "#";
+        if (/^(https?:|mailto:|tel:|\/|#)/i.test(url)) return url;
+        return `https://${url}`;
+      };
+
+      blockForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const title = document.querySelector("#blockTitle").value.trim();
+        if (!title) {
+          blockError.textContent = "A block needs a title.";
+          blockError.hidden = false;
+          document.querySelector("#blockTitle").focus();
+          return;
+        }
+
+        const entry = {
+          title,
+          url: tidyUrl(document.querySelector("#blockUrl").value),
+          label: document.querySelector("#blockLabel").value.trim() || "Website",
+          status: document.querySelector("#blockStatus").value || STATUS_OPTIONS[0],
+          description: document.querySelector("#blockDescription").value.trim(),
+        };
+
+        if (editingId) {
+          projects = projects.map((project) =>
+            project.id === editingId ? { ...project, ...entry } : project
+          );
+        } else {
+          projects = [...projects, normalize(entry)];
+        }
+
+        saveProjects();
+        closePane();
+        render();
+      });
+
+      blockDelete.addEventListener("click", () => {
+        if (!editingId) return;
+        const project = projects.find((item) => item.id === editingId);
+        if (!window.confirm(`Delete "${project ? project.title : "this block"}"?`)) return;
+        projects = projects.filter((item) => item.id !== editingId);
+        saveProjects();
+        closePane();
+        render();
+      });
+
+      // Admin gate --------------------------------------------------------
+      const adminPane = document.querySelector("#adminPane");
+      const adminForm = document.querySelector("#adminForm");
+      const adminSignedIn = document.querySelector("#adminSignedIn");
+      const adminError = document.querySelector("#adminError");
+      const adminPassword = document.querySelector("#adminPassword");
+
+      const setAdmin = (value) => {
+        isAdmin = value;
+        try {
+          if (value) window.sessionStorage.setItem(ADMIN_KEY, "true");
+          else window.sessionStorage.removeItem(ADMIN_KEY);
+        } catch (error) {
+          console.warn("Admin state is not persisted in this browser:", error);
+        }
+        render();
+      };
+
+      function openAdminPane() {
+        adminForm.hidden = isAdmin;
+        adminSignedIn.hidden = !isAdmin;
+        adminError.hidden = true;
+        adminPassword.value = "";
+        document.querySelector("#adminPaneKicker").textContent = isAdmin ? "Signed in" : "Restricted";
+        openPane(adminPane, isAdmin ? undefined : adminPassword);
+      }
+
+      adminForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (adminPassword.value !== ADMIN_PASSWORD) {
+          adminError.textContent = "That password does not match.";
+          adminError.hidden = false;
+          adminPassword.select();
+          return;
+        }
+        adminPassword.value = "";
+        setAdmin(true);
+        closePane();
+      });
+
+      document.querySelector("#adminSignOut").addEventListener("click", () => {
+        setAdmin(false);
+        closePane();
+      });
+
+      if (Array.isArray(config.contacts) && config.contacts.length) {
+        document.querySelector(".contact-list").replaceChildren(
+          ...config.contacts.map((contact) => {
+            const item = document.createElement("li");
+            item.appendChild(makeSpan("contact-label", contact.label || "Contact"));
+            const link = document.createElement("a");
+            link.href = contact.href || `mailto:${contact.value}`;
+            link.textContent = contact.value;
+            item.appendChild(link);
+            return item;
+          })
+        );
+      }
+
+      document.querySelector("#adminButton").addEventListener("click", openAdminPane);
+      document.querySelector("#contactButton").addEventListener("click", () => openPane(contactPane));
+      document.querySelector("#addBlockButton").addEventListener("click", () => openBlockPane(null));
+      document.querySelectorAll("[data-close-pane]").forEach((node) =>
+        node.addEventListener("click", closePane)
+      );
+      backdrop.addEventListener("click", closePane);
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closePane();
+      });
+
+      render();
+    </script>
+  </body>
+</html>
