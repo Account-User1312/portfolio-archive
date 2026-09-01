@@ -40,7 +40,7 @@ and the card accent (`projectAccent`, currently `violet`).
 
 ## Deploy
 
-Hosted on Cloudflare Pages as project `nealgillespie` → https://nealgillespie.pages.dev
+Hosted on Cloudflare Pages as project `nealgill` → https://nealgill.pages.dev
 
 Connected to `Account-User1312/portfolio-archive` on GitHub; every push to `main`
 auto-deploys. There is no build step: framework preset `None`, build command empty,
