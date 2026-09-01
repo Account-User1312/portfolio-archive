@@ -1,13 +1,13 @@
-// Edit this file to change the page title copy and the seeded project blocks.
-// Blocks added or edited in the Admin pane are stored in this browser and
-// override these seeds; clear them with localStorage.removeItem("portfolioArchive.projects.v1").
+// Site copy plus the starter blocks shown before anything is saved to the archive.
+// On the published site, blocks live in Cloudflare KV and are edited through the
+// Admin pane; the admin password is the ADMIN_PASSWORD environment variable and
+// is deliberately not in this file.
 window.portfolioConfig = {
   name: "Neal Gillespie",
   kicker: "Personal website archive",
   headline: "A foundational index for digital work.",
   intro: "A living collection of experiments, websites, visual systems, and finished builds.",
   projectAccent: "violet",
-  adminPassword: "admin-password",
   statusOptions: ["Featured", "Draft", "Ready for link", "Upcoming"],
   contacts: [
     { label: "Personal", value: "nealtgill@gmail.com", href: "mailto:nealtgill@gmail.com" },

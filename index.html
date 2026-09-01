@@ -46,6 +46,8 @@
           <button class="ghost-button admin-only" type="button" id="addBlockButton" hidden>+ Add block</button>
         </div>
 
+        <p class="archive-notice" id="archiveNotice" role="status" hidden></p>
+
         <div class="project-grid" id="projectGrid" aria-live="polite"></div>
       </section>
     </main>
@@ -91,12 +93,14 @@
         <div class="pane-actions">
           <span class="pane-actions-spacer"></span>
           <button class="ghost-button" type="button" data-close-pane>Cancel</button>
-          <button class="solid-button" type="submit">Unlock</button>
+          <button class="solid-button" type="submit" id="adminSubmit">Unlock</button>
         </div>
       </form>
 
       <div id="adminSignedIn" hidden>
-        <p class="pane-note">You are signed in as admin. Edit controls are live on every block until you sign out or close the tab.</p>
+        <p class="pane-note" id="adminSignedInNote">
+          You are signed in as admin. Edits save to the archive and everyone sees them.
+        </p>
         <div class="pane-actions">
           <span class="pane-actions-spacer"></span>
           <button class="ghost-button" type="button" data-close-pane>Close</button>
@@ -148,17 +152,20 @@
     <script>
       const config = window.portfolioConfig || {};
       const seedProjects = window.portfolioProjects || [];
-      const STORAGE_KEY = "portfolioArchive.projects.v1";
-      const ADMIN_KEY = "portfolioArchive.admin.v1";
-      // Soft gate only: this is a static page, so the password is visible in
-      // the source. It keeps casual visitors out of the editor, nothing more.
-      const ADMIN_PASSWORD = config.adminPassword || "admin-password";
+      const LOCAL_KEY = "portfolioArchive.projects.v1";
       const projectAccent = config.projectAccent || "violet";
+      const STATUS_OPTIONS = Array.isArray(config.statusOptions) && config.statusOptions.length
+        ? config.statusOptions
+        : ["Featured", "Draft", "Ready for link", "Upcoming"];
+
+      // On localhost there is no Functions runtime, so the page runs as a local
+      // draft: edits are on, and they stay in this browser. Anywhere else the
+      // server owns both the blocks and the password check.
+      const IS_LOCAL = ["localhost", "127.0.0.1", ""].includes(window.location.hostname);
 
       document.querySelectorAll("[data-config]").forEach((node) => {
         const key = node.dataset.config;
-        if (!config[key]) return;
-        node.textContent = config[key];
+        if (config[key]) node.textContent = config[key];
       });
 
       const makeId = () =>
@@ -175,42 +182,86 @@
         status: project.status || "Archive",
       });
 
-      const loadProjects = () => {
+      let projects = [];
+      let isAdmin = false;
+
+      const grid = document.querySelector("#projectGrid");
+      const notice = document.querySelector("#archiveNotice");
+      const isPlaceholderUrl = (url) => !url || url === "#";
+
+      const setNotice = (text, tone) => {
+        notice.hidden = !text;
+        notice.textContent = text || "";
+        notice.className = `archive-notice${tone ? ` is-${tone}` : ""}`;
+      };
+
+      const api = async (path, options = {}) => {
+        const response = await fetch(path, {
+          credentials: "same-origin",
+          headers: options.body ? { "Content-Type": "application/json" } : undefined,
+          ...options,
+        });
+        let payload = {};
         try {
-          const stored = window.localStorage.getItem(STORAGE_KEY);
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            if (Array.isArray(parsed)) return parsed.map(normalize);
+          payload = await response.json();
+        } catch {
+          /* non-JSON error page */
+        }
+        if (!response.ok) {
+          const error = new Error(payload.error || `Request failed (${response.status}).`);
+          error.status = response.status;
+          throw error;
+        }
+        return payload;
+      };
+
+      // Loading and saving -------------------------------------------------
+      const readLocal = () => {
+        try {
+          const stored = window.localStorage.getItem(LOCAL_KEY);
+          const parsed = stored ? JSON.parse(stored) : null;
+          if (Array.isArray(parsed)) return parsed.map(normalize);
+        } catch (error) {
+          console.warn("Local blocks unreadable:", error);
+        }
+        return null;
+      };
+
+      const loadProjects = async () => {
+        if (IS_LOCAL) return readLocal() || seedProjects.map(normalize);
+
+        const { blocks } = await api("/api/blocks");
+        return Array.isArray(blocks) ? blocks.map(normalize) : seedProjects.map(normalize);
+      };
+
+      const persist = async () => {
+        if (IS_LOCAL) {
+          try {
+            window.localStorage.setItem(LOCAL_KEY, JSON.stringify(projects));
+          } catch (error) {
+            setNotice("Could not save to this browser's storage.", "error");
           }
-        } catch (error) {
-          console.warn("Falling back to projects.js seeds:", error);
+          return true;
         }
-        return seedProjects.map(normalize);
-      };
 
-      const saveProjects = () => {
         try {
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+          await api("/api/blocks", { method: "PUT", body: JSON.stringify({ blocks: projects }) });
+          setNotice("Saved to the archive.", "ok");
+          window.setTimeout(() => setNotice(""), 2600);
+          return true;
         } catch (error) {
-          console.warn("Could not save blocks locally:", error);
-        }
-      };
-
-      let projects = loadProjects();
-
-      const readAdmin = () => {
-        try {
-          return window.sessionStorage.getItem(ADMIN_KEY) === "true";
-        } catch (error) {
+          if (error.status === 401) {
+            isAdmin = false;
+            render();
+            setNotice("Your session expired. Sign in again — that change was not saved.", "error");
+          } else {
+            setNotice(`Not saved: ${error.message}`, "error");
+          }
           return false;
         }
       };
 
-      let isAdmin = readAdmin();
-
-      const grid = document.querySelector("#projectGrid");
-      const isPlaceholderUrl = (url) => !url || url === "#";
-
+      // Rendering ----------------------------------------------------------
       const renderStats = () => {
         const stats = {
           projectCount: projects.length,
@@ -219,7 +270,6 @@
             String(project.status || "").toLowerCase().includes("featured")
           ).length,
         };
-
         Object.entries(stats).forEach(([key, value]) => {
           const node = document.querySelector(`[data-stat='${key}']`);
           if (node) node.textContent = value;
@@ -250,9 +300,7 @@
         const footer = document.createElement("span");
         footer.className = "project-footer";
         footer.appendChild(makeSpan("", project.status || "Archive"));
-        if (isPlaceholderUrl(project.url)) {
-          footer.appendChild(makeSpan("project-flag", "No link yet"));
-        }
+        if (isPlaceholderUrl(project.url)) footer.appendChild(makeSpan("project-flag", "No link yet"));
 
         card.append(
           link,
@@ -282,7 +330,6 @@
         const button = document.createElement("button");
         button.type = "button";
         button.className = "project-card add-card";
-        button.innerHTML = "";
         button.append(
           makeSpan("add-card-plus", "+"),
           makeSpan("add-card-title", "Add block"),
@@ -303,9 +350,10 @@
         renderStats();
       };
 
-      // Panes ------------------------------------------------------------
+      // Panes --------------------------------------------------------------
       const backdrop = document.querySelector("#paneBackdrop");
       const contactPane = document.querySelector("#contactPane");
+      const adminPane = document.querySelector("#adminPane");
       const blockPane = document.querySelector("#blockPane");
       const blockForm = document.querySelector("#blockForm");
       const blockError = document.querySelector("#blockError");
@@ -331,10 +379,6 @@
         pane.hidden = false;
         (focusTarget || pane.querySelector("[data-close-pane]")).focus();
       };
-
-      const STATUS_OPTIONS = Array.isArray(config.statusOptions) && config.statusOptions.length
-        ? config.statusOptions
-        : ["Featured", "Draft", "Ready for link", "Upcoming"];
 
       const fillStatusOptions = (current) => {
         const select = document.querySelector("#blockStatus");
@@ -381,7 +425,7 @@
         return `https://${url}`;
       };
 
-      blockForm.addEventListener("submit", (event) => {
+      blockForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         const title = document.querySelector("#blockTitle").value.trim();
         if (!title) {
@@ -399,71 +443,88 @@
           description: document.querySelector("#blockDescription").value.trim(),
         };
 
-        if (editingId) {
-          projects = projects.map((project) =>
-            project.id === editingId ? { ...project, ...entry } : project
-          );
-        } else {
-          projects = [...projects, normalize(entry)];
-        }
+        const previous = projects;
+        projects = editingId
+          ? projects.map((project) => (project.id === editingId ? { ...project, ...entry } : project))
+          : [...projects, normalize(entry)];
 
-        saveProjects();
         closePane();
         render();
+        if (!(await persist())) {
+          projects = previous; // server refused the write — do not pretend it landed
+          render();
+        }
       });
 
-      blockDelete.addEventListener("click", () => {
+      blockDelete.addEventListener("click", async () => {
         if (!editingId) return;
         const project = projects.find((item) => item.id === editingId);
         if (!window.confirm(`Delete "${project ? project.title : "this block"}"?`)) return;
+
+        const previous = projects;
         projects = projects.filter((item) => item.id !== editingId);
-        saveProjects();
         closePane();
         render();
+        if (!(await persist())) {
+          projects = previous;
+          render();
+        }
       });
 
-      // Admin gate --------------------------------------------------------
-      const adminPane = document.querySelector("#adminPane");
+      // Admin --------------------------------------------------------------
       const adminForm = document.querySelector("#adminForm");
       const adminSignedIn = document.querySelector("#adminSignedIn");
       const adminError = document.querySelector("#adminError");
       const adminPassword = document.querySelector("#adminPassword");
-
-      const setAdmin = (value) => {
-        isAdmin = value;
-        try {
-          if (value) window.sessionStorage.setItem(ADMIN_KEY, "true");
-          else window.sessionStorage.removeItem(ADMIN_KEY);
-        } catch (error) {
-          console.warn("Admin state is not persisted in this browser:", error);
-        }
-        render();
-      };
+      const adminSubmit = document.querySelector("#adminSubmit");
 
       function openAdminPane() {
-        adminForm.hidden = isAdmin;
-        adminSignedIn.hidden = !isAdmin;
+        adminForm.hidden = isAdmin || IS_LOCAL;
+        adminSignedIn.hidden = !(isAdmin || IS_LOCAL);
         adminError.hidden = true;
         adminPassword.value = "";
-        document.querySelector("#adminPaneKicker").textContent = isAdmin ? "Signed in" : "Restricted";
-        openPane(adminPane, isAdmin ? undefined : adminPassword);
+        document.querySelector("#adminPaneKicker").textContent = IS_LOCAL
+          ? "Local draft"
+          : isAdmin
+            ? "Signed in"
+            : "Restricted";
+        document.querySelector("#adminSignedInNote").textContent = IS_LOCAL
+          ? "Local draft mode: editing is always on here and changes stay in this browser. The published site asks for the password."
+          : "You are signed in as admin. Edits save to the archive and everyone sees them.";
+        openPane(adminPane, isAdmin || IS_LOCAL ? undefined : adminPassword);
       }
 
-      adminForm.addEventListener("submit", (event) => {
+      adminForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-        if (adminPassword.value !== ADMIN_PASSWORD) {
-          adminError.textContent = "That password does not match.";
+        adminSubmit.disabled = true;
+        try {
+          await api("/api/session", {
+            method: "POST",
+            body: JSON.stringify({ password: adminPassword.value }),
+          });
+          adminPassword.value = "";
+          isAdmin = true;
+          render();
+          closePane();
+        } catch (error) {
+          adminError.textContent = error.message;
           adminError.hidden = false;
           adminPassword.select();
-          return;
+        } finally {
+          adminSubmit.disabled = false;
         }
-        adminPassword.value = "";
-        setAdmin(true);
-        closePane();
       });
 
-      document.querySelector("#adminSignOut").addEventListener("click", () => {
-        setAdmin(false);
+      document.querySelector("#adminSignOut").addEventListener("click", async () => {
+        if (!IS_LOCAL) {
+          try {
+            await api("/api/session", { method: "DELETE" });
+          } catch (error) {
+            setNotice(`Could not sign out: ${error.message}`, "error");
+          }
+        }
+        isAdmin = false;
+        render();
         closePane();
       });
 
@@ -492,7 +553,27 @@
         if (event.key === "Escape") closePane();
       });
 
-      render();
+      // Boot ---------------------------------------------------------------
+      (async () => {
+        if (IS_LOCAL) {
+          isAdmin = true;
+          projects = await loadProjects();
+          render();
+          setNotice("Local draft — changes stay in this browser and are not published.", "local");
+          return;
+        }
+
+        try {
+          const [{ admin }, loaded] = await Promise.all([api("/api/session"), loadProjects()]);
+          isAdmin = Boolean(admin);
+          projects = loaded;
+          render();
+        } catch (error) {
+          projects = seedProjects.map(normalize);
+          render();
+          setNotice(`Showing the starter blocks — the archive did not load: ${error.message}`, "error");
+        }
+      })();
     </script>
   </body>
 </html>
