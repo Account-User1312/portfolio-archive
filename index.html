@@ -73,6 +73,10 @@
           <span class="contact-label">Phone</span>
           <a href="tel:+15138071705">513-807-1705</a>
         </li>
+        <li>
+          <span class="contact-label">LinkedIn</span>
+          <a href="https://www.linkedin.com/in/neal01/" target="_blank" rel="noopener noreferrer">linkedin.com/in/neal01</a>
+        </li>
       </ul>
     </section>
 
@@ -536,6 +540,10 @@
             const link = document.createElement("a");
             link.href = contact.href || `mailto:${contact.value}`;
             link.textContent = contact.value;
+            if (/^https?:/i.test(link.href)) {
+              link.target = "_blank";
+              link.rel = "noopener noreferrer";
+            }
             item.appendChild(link);
             return item;
           })

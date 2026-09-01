@@ -17,6 +17,11 @@ window.portfolioConfig = {
       href: "mailto:freeknowledgelibrary@proton.me",
     },
     { label: "Phone", value: "513-807-1705", href: "tel:+15138071705" },
+    {
+      label: "LinkedIn",
+      value: "linkedin.com/in/neal01",
+      href: "https://www.linkedin.com/in/neal01/",
+    },
   ],
 };
 
