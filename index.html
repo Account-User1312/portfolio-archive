@@ -17,7 +17,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
       rel="stylesheet"
     >
-    <link rel="stylesheet" href="styles.css?v=4">
+    <link rel="stylesheet" href="styles.css?v=5">
   </head>
   <body>
     <div class="scene" aria-hidden="true"></div>
@@ -160,7 +160,7 @@
       </form>
     </section>
 
-    <script src="projects.js?v=4"></script>
+    <script src="projects.js?v=5"></script>
     <script>
       const config = window.portfolioConfig || {};
       const seedProjects = window.portfolioProjects || [];
@@ -323,15 +323,27 @@
         );
 
         if (isAdmin) {
+          const index = projects.findIndex((item) => item.id === project.id);
           const tools = document.createElement("div");
           tools.className = "card-tools";
-          const edit = document.createElement("button");
-          edit.type = "button";
-          edit.className = "card-tool";
-          edit.textContent = "Edit";
-          edit.setAttribute("aria-label", `Edit ${project.title}`);
-          edit.addEventListener("click", () => openBlockPane(project.id));
-          tools.appendChild(edit);
+
+          const makeTool = (label, ariaLabel, onClick, disabled) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "card-tool";
+            button.textContent = label;
+            button.setAttribute("aria-label", ariaLabel);
+            button.title = ariaLabel;
+            button.disabled = Boolean(disabled);
+            button.addEventListener("click", onClick);
+            return button;
+          };
+
+          tools.append(
+            makeTool("◀", `Move ${project.title} earlier`, () => moveBlock(project.id, -1), index === 0),
+            makeTool("▶", `Move ${project.title} later`, () => moveBlock(project.id, 1), index === projects.length - 1),
+            makeTool("Edit", `Edit ${project.title}`, () => openBlockPane(project.id))
+          );
           card.appendChild(tools);
         }
 
@@ -361,6 +373,44 @@
         document.querySelector("#adminButton").textContent = isAdmin ? "Admin ✓" : "Admin";
         renderStats();
       };
+
+      // Reordering ---------------------------------------------------------
+      // Saves are debounced so a run of clicks sends one write, and the whole
+      // run rolls back together if the server refuses it.
+      let saveTimer = null;
+      let rollbackTo = null;
+
+      const queuePersist = (snapshot) => {
+        if (!rollbackTo) rollbackTo = snapshot;
+        window.clearTimeout(saveTimer);
+        saveTimer = window.setTimeout(async () => {
+          const restore = rollbackTo;
+          rollbackTo = null;
+          if (!(await persist())) {
+            projects = restore;
+            render();
+          }
+        }, 600);
+      };
+
+      function moveBlock(id, direction) {
+        const from = projects.findIndex((item) => item.id === id);
+        const to = from + direction;
+        if (from < 0 || to < 0 || to >= projects.length) return;
+
+        const snapshot = projects.map((item) => ({ ...item }));
+        const next = [...projects];
+        [next[from], next[to]] = [next[to], next[from]];
+        projects = next;
+        render();
+
+        // Keep the keyboard on the button that was just pressed.
+        const moved = grid.querySelector(`[data-id="${id}"]`);
+        const button = moved && moved.querySelectorAll(".card-tool")[direction < 0 ? 0 : 1];
+        if (button && !button.disabled) button.focus();
+
+        queuePersist(snapshot);
+      }
 
       // Panes --------------------------------------------------------------
       const backdrop = document.querySelector("#paneBackdrop");

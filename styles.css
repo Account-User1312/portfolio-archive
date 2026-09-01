@@ -1006,3 +1006,20 @@ h1 {
   background: rgba(104, 66, 168, 0.6);
   transform: translateY(-1px);
 }
+
+/* Reorder controls sit with the edit control on each card. */
+.card-tool[disabled] {
+  opacity: 0.32;
+  cursor: not-allowed;
+}
+
+.card-tool[disabled]:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(12, 13, 24, 0.72);
+}
+
+.card-tools .card-tool:not(:last-child) {
+  padding: 6px 9px;
+  font-size: 0.72rem;
+  line-height: 1;
+}
