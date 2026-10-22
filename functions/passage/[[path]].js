@@ -39,6 +39,10 @@ export async function onRequest(context) {
   const headers = new Headers(request.headers);
   headers.set('host', new URL(UPSTREAM).host);
   headers.set('accept-encoding', 'identity');   // so we can rewrite the body
+  // Marks this as a proxy fetch. The Netlify edge function sends anything
+  // arriving without it back here, so the .netlify.app address stops being
+  // a second front door, without the proxy redirecting itself in circles.
+  headers.set('x-via-nealgill', '1');
   STRIP.forEach((h) => headers.delete(h));
 
   const init = { method: request.method, headers, redirect: 'manual' };
